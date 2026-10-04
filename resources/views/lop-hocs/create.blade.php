@@ -1,4 +1,5 @@
 @extends('layout1')
+@section('title', isset($lopHoc) ? 'Cập nhật lớp học' : 'Thêm lớp học')
 
 @section('content')
 @if($errors->any())
@@ -34,6 +35,7 @@
                                name="ma_lop" 
                                value="{{ old('ma_lop', $lopHoc->ma_lop ?? '') }}" 
                                placeholder="VD: LH10A1" 
+                               maxlength="6"
                                required>
                         @error('ma_lop')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -65,7 +67,7 @@
                                id="giao_vien" 
                                name="giao_vien" 
                                value="{{ old('giao_vien', $lopHoc->giao_vien ?? '') }}" 
-                               placeholder="VD: Nguyễn Văn A">
+                               placeholder="VD: Nguyễn Văn A" maxlength="255" required>
                         @error('giao_vien')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -92,8 +94,8 @@
                                class="form-control @error('si_so') is-invalid @enderror" 
                                id="si_so" 
                                name="si_so" 
-                               value="{{ old('si_so', $lopHoc->si_so ?? 0) }}" 
-                               min="0">
+                               value="{{ old('si_so', $lopHoc->si_so ?? 1) }}"
+                               min="1" required>
                         @error('si_so')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

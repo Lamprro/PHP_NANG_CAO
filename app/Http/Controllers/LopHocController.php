@@ -12,9 +12,41 @@ class LopHocController extends Controller
      */
     public function index(Request $request)
     {
-        //
-        $perPage=$request ->input('per_page',10);
-        $lopHocs = LopHoc::paginate($perPage)->withQueryString();
+        $filters = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'trang_thai' => 'nullable|boolean',
+            'si_so_min' => 'nullable|integer|min:1',
+            'si_so_max' => 'nullable|integer|min:1'.($request->filled('si_so_min') ? '|gte:si_so_min' : ''),
+            'sort' => 'nullable|in:id,ten_lop,ma_lop,si_so,giao_vien,trang_thai',
+            'direction' => 'nullable|in:asc,desc',
+            'per_page' => 'nullable|in:5,10,20',
+        ]);
+        $query = LopHoc::query();
+        if ($request->filled('search')) {
+            $search = trim($filters['search']);
+            $query->where(function ($query) use ($search) {
+                $query->where('ten_lop', 'like', '%'.$search.'%')
+                    ->orWhere('ma_lop', 'like', '%'.$search.'%')
+                    ->orWhere('giao_vien', 'like', '%'.$search.'%')
+                    ->orWhere('so_dien_thoai_gvien', 'like', '%'.$search.'%');
+            });
+        }
+        if ($request->filled('trang_thai')) {
+            $query->where('trang_thai', $filters['trang_thai']);
+        }
+        if ($request->filled('si_so_min')) {
+            $query->where('si_so', '>=', $filters['si_so_min']);
+        }
+        if ($request->filled('si_so_max')) {
+            $query->where('si_so', '<=', $filters['si_so_max']);
+        }
+        $sort = $filters['sort'] ?? 'id';
+        $query->orderBy($sort, $filters['direction'] ?? 'asc');
+        if ($sort !== 'id') {
+            $query->orderBy('id');
+        }
+        $lopHocs = $query->paginate((int) ($filters['per_page'] ?? 10))->withQueryString();
+
         return view('lop-hocs.index', compact('lopHocs'));
     }
 
@@ -33,7 +65,7 @@ class LopHocController extends Controller
     public function store(Request $request)
     {
         //
-        $request->validate([
+        $validated = $request->validate([
             'ten_lop' => 'required|string|max:255',
             'ma_lop' => 'required|string|max:6|unique:lop_hocs,ma_lop',
             'si_so' => 'required|integer|min:1',
@@ -54,11 +86,13 @@ class LopHocController extends Controller
         */
         try {
 
-            $lophoc = LopHoc::create($request->all());
+            $lophoc = LopHoc::create($validated);
 
             return redirect()->route('lop-hocs.index')->with('success', 'Lớp học đã được tạo thành công.');
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->withErrors(['error' => 'Có lỗi xảy ra khi tạo lớp học: ' . $e->getMessage()]);
+            report($e);
+
+            return redirect()->back()->withInput()->withErrors(['error' => 'Có lỗi xảy ra khi tạo lớp học. Vui lòng thử lại.']);
         }
 
     }
@@ -68,7 +102,9 @@ class LopHocController extends Controller
      */
     public function show(LopHoc $lopHoc)
     {
-        //
+        $sinhViens = $lopHoc->sinhViens()->orderBy('name')->orderBy('id')->paginate(10);
+
+        return view('lop-hocs.show', compact('lopHoc', 'sinhViens'));
     }
 
     /**
@@ -78,6 +114,7 @@ class LopHocController extends Controller
     {
         //
         $lopHoc = LopHoc::findOrFail($id);
+
         return view('lop-hocs.create', ['lopHoc' => $lopHoc]);
     }
 
@@ -88,7 +125,7 @@ class LopHocController extends Controller
     {
         $validated = $request->validate([
             'ten_lop' => 'required|string|max:255',
-            'ma_lop' => 'required|string|max:6|unique:lop_hocs,ma_lop,' . $lopHoc->id,
+            'ma_lop' => 'required|string|max:6|unique:lop_hocs,ma_lop,'.$lopHoc->id,
             'si_so' => 'required|integer|min:1',
             'giao_vien' => 'required|string|max:255',
             'so_dien_thoai_gvien' => ['nullable', 'regex:/^0[0-9]{9}$/'],
@@ -106,6 +143,11 @@ class LopHocController extends Controller
      */
     public function destroy(LopHoc $lopHoc)
     {
+        if ($lopHoc->sinhViens()->exists()) {
+            return redirect()->route('lop-hocs.index')->withErrors([
+                'error' => 'Không thể xóa lớp đang có sinh viên. Hãy chuyển sinh viên sang lớp khác hoặc xóa sinh viên trước.',
+            ]);
+        }
         $lopHoc->delete();
 
         return redirect()->route('lop-hocs.index')->with('success', 'Lớp học đã được xóa thành công.');

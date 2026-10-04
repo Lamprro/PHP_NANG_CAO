@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LopHoc extends Model
 {
     //
     use HasFactory;
+
     protected $table = 'lop_hocs';
+
     protected $fillable = [
         'ten_lop',
         'ma_lop',
@@ -19,4 +22,9 @@ class LopHoc extends Model
         'ghi_chu',
         'trang_thai',
     ];
+
+    public function sinhViens(): HasMany
+    {
+        return $this->hasMany(SinhVien::class);
+    }
 }

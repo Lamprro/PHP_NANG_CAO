@@ -70,13 +70,14 @@
             border-radius: 5px;
         }
 
-        .sidebar a:hover {
+        .sidebar a:hover, .sidebar a[aria-current="page"] {
             background-color: #2c3e50;
         }
 
         /* CONTENT */
         .content {
             flex: 1;
+            min-width: 0;
             padding: 30px;
             background-color: #ecf0f1;
         }
@@ -94,6 +95,15 @@
             align-items: center;
             justify-content: center;
         }
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .sidebar { width: 100%; padding: 15px; }
+            .sidebar h2 { margin-bottom: 10px; }
+            .sidebar ul { display: flex; flex-wrap: wrap; padding: 0; margin: 0; }
+            .sidebar li { margin-bottom: 0; }
+            .content { padding: 16px; }
+            .pagination-container { flex-wrap: wrap; gap: 12px; }
+        }
     </style>
     @stack('styles')
 </head>
@@ -110,6 +120,9 @@
 
         <!-- CONTENT -->
         <main class="content">
+            @if(session('success'))
+                <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+            @endif
             @yield('content')
         </main>
 

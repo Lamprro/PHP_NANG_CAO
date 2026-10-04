@@ -21,10 +21,10 @@ class LopHocFactory extends Factory
             'ten_lop' => $this->faker->word(),
             'ma_lop' => $this->faker->unique()->regexify('[A-Z]{2}[0-9]{3}'),
             'giao_vien' => $this->faker->name(),
-            'so_dien_thoai_gvien' => $this->faker->phoneNumber(),
+            'so_dien_thoai_gvien' => '0'.$this->faker->numerify('#########'),
             'ghi_chu' => $this->faker->sentence(),
             'si_so' => $this->faker->numberBetween(20, 50),
-            'trang_thai' => $this->faker->boolean()
+            'trang_thai' => $this->faker->boolean(),
         ];
     }
 }

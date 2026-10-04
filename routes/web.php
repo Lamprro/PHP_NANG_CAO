@@ -1,32 +1,26 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SinhVienController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LopHocController;
+use App\Http\Controllers\MenuController;
+use App\Http\Controllers\SinhVienController;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-}); 
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Route::get('/sinhvien', function () {
-//    return view('sinhvien.index');
-//});
-
-Route::get('/sinhvien',[SinhVienController::class, 'index']);
-
-//Route::get('/sinhvien/show/{id?}',[SinhVienController::class, 'getID'])->where('id', '[0-9]+');
-//Route::get('/sinhvien/show2/{name?}/{tuoi?}',[SinhVienController::class, 'show2'])->where('tuoi', '[0-9]+');
-//Route::get('/sinhvien/add',[SinhVienController::class, 'add']);
-
-Route::prefix('sinhvien')->group(function(){
-    Route::get('/show/{id?}',[SinhVienController::class, 'getID'])->where('id', '[0-9]+');
-    Route::get('/show2/{name?}/{tuoi?}',[SinhVienController::class, 'show2'])->where('tuoi', '[0-9]+');
-    Route::get('/add',[SinhVienController::class, 'add']);
+// Giữ đường dẫn thêm và các ví dụ định tuyến trong bài học cũ.
+Route::prefix('sinhvien')->name('sinhvien.')->group(function () {
+    Route::get('/', [SinhVienController::class, 'index'])->name('index');
+    Route::get('/add', [SinhVienController::class, 'add'])->name('create');
+    Route::post('/', [SinhVienController::class, 'store'])->name('store');
+    Route::get('/show/{id?}', [SinhVienController::class, 'getID'])->whereNumber('id')->name('legacy-show');
+    Route::get('/show2/{name?}/{tuoi?}', [SinhVienController::class, 'show2'])->whereNumber('tuoi')->name('demo');
+    Route::get('/{sinh_vien}/edit', [SinhVienController::class, 'edit'])->whereNumber('sinh_vien')->name('edit');
+    Route::get('/{sinh_vien}', [SinhVienController::class, 'show'])->whereNumber('sinh_vien')->name('show');
+    Route::put('/{sinh_vien}', [SinhVienController::class, 'update'])->whereNumber('sinh_vien')->name('update');
+    Route::delete('/{sinh_vien}', [SinhVienController::class, 'destroy'])->whereNumber('sinh_vien')->name('destroy');
 });
 
-Route::post('/sinhvien',[SinhVienController::class, 'store'])->name('sinhvien.store');
-
-Route::get('/lop-hocs', [LopHocController::class, 'index']);
-Route::get('/lop-hocs/create', [LopHocController::class, 'create'])->name('lop-hocs.create');
 Route::post('/lop-hocs/store', [LopHocController::class, 'store'])->name('lop-hocs.store');
-Route::resource('lop-hocs', LopHocController::class);
+Route::resource('lop-hocs', LopHocController::class)->names(['store' => 'lop-hocs.store-resource']);
+Route::resource('menus', MenuController::class)->except('show');
